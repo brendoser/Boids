@@ -1,19 +1,18 @@
 # Herd Immunity Simulation
 # Boids move around, boids interact with each other
 # Boids infect other boids until the "pandemic" ends
-# Rules:
+# TODO: Define Rules (Infection)
 # TBD
 
-# Imports
-import pygame
+# Python Imports
+import pygame as pg
 import numpy as np
-
-# Import Keys
 from pygame.locals import (
     K_ESCAPE,
     K_SPACE,
     KEYDOWN,
 )
+
 # Settings (to be put in config file or smth later)
 SCREEN_WIDTH = 500
 SCREEN_HEIGHT = 300
@@ -22,9 +21,9 @@ FRAMERATE = 30
 
 def main():
     # Initialize and create drawing window
-    pygame.init()
-    screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
-    clock = pygame.time.Clock()
+    pg.init()
+    screen = pg.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
+    clock = pg.time.Clock()
 
     boid_speed = 30
     boid_size = 5
@@ -36,7 +35,7 @@ def main():
     running = True
     while running:
         # Look at every event in the queue
-        for event in pygame.event.get():
+        for event in pg.event.get():
             # Did the user hit a key?
             if event.type == KEYDOWN:
                 # Was it the Escape key? If so, stop the loop.
@@ -53,11 +52,11 @@ def main():
             boid_vel[1] *= -1
 
         screen.fill((0, 0, 0))
-        pygame.draw.circle(screen, (255, 0, 255), boid_pos, boid_size)
-        pygame.display.flip()
+        pg.draw.circle(screen, (255, 0, 255), boid_pos, boid_size)
+        pg.display.flip()
         clock.tick(FRAMERATE)
 
-    pygame.quit()
+    pg.quit()
 
 
 if __name__ == '__main__':
