@@ -12,12 +12,44 @@ from pygame.locals import (
     K_SPACE,
     KEYDOWN,
 )
+from random import seed
+from random import random
 
 # Settings (to be put in config file or smth later)
-SCREEN_WIDTH = 500
-SCREEN_HEIGHT = 300
+SCREEN_WIDTH = 1200
+SCREEN_HEIGHT = 600
 FRAMERATE = 30
+BOID_COUNT = 100
+#seed(1)
 
+class Boid():
+    def __init__(self, size, speed):
+        super(Boid, self).__init__()
+        self.size = size
+        self.color = (random()*255, random()*255, random()*255)
+        # Pick random position
+        self.pos = np.array([0, 0], dtype=float)
+        self.pos[0] = random() * (SCREEN_WIDTH - size) + size
+        self.pos[1] = random() * (SCREEN_HEIGHT - size) + size
+        # Pick random speed
+        self.vel = np.array([0,0], dtype=float)
+        direction = random() * 2 * np.pi
+        print(direction)
+        self.vel[0] = np.cos(direction) * speed
+        self.vel[1] = np.sin(direction) * speed
+        print(self.vel)
+
+    def update(self):
+        # Update Position
+        self.pos += self.vel
+        # Check for wall collision
+        if not(self.size < self.pos[0] < SCREEN_WIDTH - self.size):
+            self.vel[0] *= -1
+        if not (self.size < self.pos[1] < SCREEN_HEIGHT - self.size):
+            self.vel[1] *= -1
+
+    def draw(self, screen):
+        pg.draw.circle(screen, self.color, self.pos, self.size)
 
 def main():
     # Initialize and create drawing window
@@ -25,14 +57,13 @@ def main():
     screen = pg.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
     clock = pg.time.Clock()
 
-    boid_speed = 30
-    boid_size = 5
+    boiz = []
+    for i in range(BOID_COUNT):
+        boiz.append(Boid(5, 5))
 
-    boid_pos = [SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2]
-    boid_vel = [np.sqrt(boid_speed / 2), np.sqrt(boid_speed / 2)]
 
     # Run until the game ends
-    running = True
+    running = 1
     while running:
         # Look at every event in the queue
         for event in pg.event.get():
@@ -42,17 +73,14 @@ def main():
                 if event.key == K_ESCAPE:
                     running = False
 
-        boid_pos[0] += boid_vel[0]
-        boid_pos[1] += boid_vel[1]
+        for boi in boiz:
+            boi.update()
 
-        if boid_pos[0] > SCREEN_WIDTH - boid_size or boid_pos[0] < boid_size:
-            boid_vel[0] *= -1
+        screen.fill(0)
 
-        if boid_pos[1] > SCREEN_HEIGHT - boid_size or boid_pos[1] < boid_size:
-            boid_vel[1] *= -1
+        for boi in boiz:
+            boi.draw(screen)
 
-        screen.fill((0, 0, 0))
-        pg.draw.circle(screen, (255, 0, 255), boid_pos, boid_size)
         pg.display.flip()
         clock.tick(FRAMERATE)
 
