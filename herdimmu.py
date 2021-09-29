@@ -20,13 +20,22 @@ SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 600
 FRAMERATE = 30
 BOID_COUNT = 100
+INFEC_RAD = 20 # Infectious Radius
+
+color_sick = (255, 0, 0)
+color_well = (0, 255, 255)
+
 #seed(1)
+
+class attr():
+    def __init__(self):
+        self.sick = 0
 
 class Boid():
     def __init__(self, size, speed):
         super(Boid, self).__init__()
         self.size = size
-        self.color = (random()*255, random()*255, random()*255)
+        self.color = color_well # (random()*255, random()*255, random()*255)
         # Pick random position
         self.pos = np.array([0, 0], dtype=float)
         self.pos[0] = random() * (SCREEN_WIDTH - size) + size
@@ -37,7 +46,9 @@ class Boid():
         print(direction)
         self.vel[0] = np.cos(direction) * speed
         self.vel[1] = np.sin(direction) * speed
-        print(self.vel)
+        # Attributes
+        self.attr = attr()
+
 
     def update(self):
         # Update Position
@@ -47,6 +58,9 @@ class Boid():
             self.vel[0] *= -1
         if not (self.size < self.pos[1] < SCREEN_HEIGHT - self.size):
             self.vel[1] *= -1
+        # Change color if infected
+        if self.attr.sick == 1:
+            self.color = color_sick
 
     def draw(self, screen):
         pg.draw.circle(screen, self.color, self.pos, self.size)
@@ -61,6 +75,7 @@ def main():
     for i in range(BOID_COUNT):
         boiz.append(Boid(5, 5))
 
+    boiz[0].attr.sick = 1
 
     # Run until the game ends
     running = 1
