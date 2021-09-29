@@ -12,41 +12,43 @@ from pygame.locals import (
     K_SPACE,
     KEYDOWN,
 )
-from random import seed
 from random import random
 
 # Settings (to be put in config file or smth later)
 SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 600
 FRAMERATE = 30
-BOID_COUNT = 100
-INFEC_RAD = 20 # Infectious Radius
 
+# Basic Simulation Settings
+BOID_COUNT = 200
+INFEC_RAD = 20 # Infectious Radius
+BOID_SIZE = 5
+BOID_SPEED = 5
+
+# Color Scheme
 color_sick = (255, 0, 0)
 color_well = (0, 255, 255)
 
-#seed(1)
-
+# This class stores health information on individuals
 class attr():
     def __init__(self):
         self.sick = 0
 
+# This class stores information for a single boid
 class Boid():
     def __init__(self, size, speed):
-        super(Boid, self).__init__()
         self.size = size
-        self.color = color_well # (random()*255, random()*255, random()*255)
+        self.color = color_well
         # Pick random position
         self.pos = np.array([0, 0], dtype=float)
         self.pos[0] = random() * (SCREEN_WIDTH - size) + size
         self.pos[1] = random() * (SCREEN_HEIGHT - size) + size
-        # Pick random speed
+        # Pick random direction
         self.vel = np.array([0,0], dtype=float)
         direction = random() * 2 * np.pi
-        print(direction)
         self.vel[0] = np.cos(direction) * speed
         self.vel[1] = np.sin(direction) * speed
-        # Attributes
+        # Health Attributes
         self.attr = attr()
 
 
@@ -65,19 +67,38 @@ class Boid():
     def draw(self, screen):
         pg.draw.circle(screen, self.color, self.pos, self.size)
 
+    def check_sick(self, sick_boiz):
+        # Look for nearby boids that are sick, return 1 if they are within range
+        close = 0
+        for sick_boi in sick_boiz:
+            # Do rough check using simple math
+            if abs(self.pos[0] - sick_boi.pos[0]) < INFEC_RAD:
+                if abs(self.pos[1] - sick_boi.pos[1]) < INFEC_RAD:
+
+                    # Do more complex check
+                    x_dist = abs(self.pos[0] - sick_boi.pos[0])
+                    y_dist = abs(self.pos[1] - sick_boi.pos[1])
+                    if (pow(x_dist, 2) + pow(y_dist, 2)) < pow(INFEC_RAD, 2):
+                        self.attr.sick = 1
+                        close = 1
+        return close
+
 def main():
     # Initialize and create drawing window
     pg.init()
     screen = pg.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
     clock = pg.time.Clock()
 
-    boiz = []
+    # Create boid groups
+    healthy_boiz = []
     for i in range(BOID_COUNT):
-        boiz.append(Boid(5, 5))
+        healthy_boiz.append(Boid(5, 5))
 
-    boiz[0].attr.sick = 1
+    sick_boiz = []
+    sick_boiz.append(healthy_boiz[0])
+    healthy_boiz.pop(0)
+    sick_boiz[0].attr.sick = 1
 
-    # Run until the game ends
     running = 1
     while running:
         # Look at every event in the queue
@@ -88,12 +109,24 @@ def main():
                 if event.key == K_ESCAPE:
                     running = False
 
-        for boi in boiz:
-            boi.update()
-
+        # Draw blank screen
         screen.fill(0)
 
-        for boi in boiz:
+        # Update and draw healthy boids
+        for i, boi in enumerate(healthy_boiz):
+            boi.update()
+
+            # This check compares each healthy boid to all sick boids
+            near = boi.check_sick(sick_boiz)
+            if near == 1:
+                sick_boiz.append(boi)
+                healthy_boiz.pop(i)
+            else:
+                boi.draw(screen)
+
+        # Update and draw sick boids
+        for boi in sick_boiz:
+            boi.update()
             boi.draw(screen)
 
         pg.display.flip()
